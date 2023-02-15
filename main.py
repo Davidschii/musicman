@@ -1,39 +1,55 @@
 import sys
-from PyQt5.QtCore import *
+from glob import glob
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
 
-
 class Player(QWidget):
     def __init__(self):
-        QWidget.__init__(self)
+        super().__init__()
         self.resize(1280,720)
         self.setWindowTitle("Musicman")
+        self.song_directory = "music/"
 
         # Widgets
         self.setWindowIcon(QIcon("assets/icon.png"))
+        self.label = QLabel("Song selection:", self)
         self.button_play = QPushButton("Play", self)
-        self.songdir = QLineEdit(self)
+        self.songlistbox = QComboBox(self)
 
         # Layout
         hbl = QHBoxLayout()
-        hbl.addWidget(self.button_play)
+        hbl.addWidget(self.label)
+        hbl.addWidget(self.songlistbox)
 
         vbl = QVBoxLayout()
-        vbl.addWidget(self.songdir)
         vbl.addLayout(hbl)
+        vbl.addWidget(self.button_play)
 
         self.setLayout(vbl)
+        self.songlist_init()
 
         # Connections
-        self.songdir.returnPressed.connect(self.songplay)
-        self.button_play.clicked.connect(self.songplay)
+        self.songname = "Please choose a song!"
+        self.songlistbox.activated[str].connect(self.song_change)
+        self.button_play.clicked.connect(self.song_play)
 
         self.show()
 
-    def songplay(self):
-        sys.exit()
+    def songlist_init(self):
+        start = len(self.song_directory)
+        songlist = [self.song_directory + "Please choose a song!"]
+        songlist = songlist + glob("music/*.mp3") + glob("music/*.wav") + glob("music/*.flac")
+        for song in songlist:
+            self.songlistbox.addItem(song[start:])
+
+    def song_change(self):
+        self.songname = str(self.songlistbox.currentText())
+
+    def song_play(self):
+        if self.songname != "Please choose a song!":
+            song = "music/" + self.songname
+            print(song)
 
 
 if __name__ == "__main__":

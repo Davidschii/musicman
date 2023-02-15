@@ -1,1 +1,3 @@
-/music/hartzer.mp3
+/music/*.mp3
+/music/*.wav
+/music/*.flac
