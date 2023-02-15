@@ -39,7 +39,8 @@ class Player(QWidget):
     def songlist_init(self):
         start = len(self.song_directory)
         songlist = [self.song_directory + "Please choose a song!"]
-        songlist = songlist + glob("music/*.mp3") + glob("music/*.wav") + glob("music/*.flac")
+        songlist = songlist + glob(self.song_directory + "*.mp3") + glob(self.song_directory + "*.wav") \
+                            + glob(self.song_directory + "*.flac")
         for song in songlist:
             self.songlistbox.addItem(song[start:])
 
@@ -48,7 +49,7 @@ class Player(QWidget):
 
     def song_play(self):
         if self.songname != "Please choose a song!":
-            song = "music/" + self.songname
+            song = self.song_directory + self.songname
             print(song)
 
 
