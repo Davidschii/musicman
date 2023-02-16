@@ -1,8 +1,6 @@
 import sys
-from glob import glob
-
 import pygame
-from pygame import mixer
+from glob import glob
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
@@ -12,11 +10,13 @@ class Player(QWidget):
 #        self.resize(1280,720)
         self.setWindowTitle("Musicman")
         self.song_directory = "music/"
+        pygame.mixer.init()
 
         # Widgets
         self.setWindowIcon(QIcon("assets/icon.png"))
         self.label = QLabel("Song selection:", self)
         self.button_play = QPushButton("Play", self)
+        self.button_pause = QPushButton("Pause / Resume", self)
         self.songlistbox = QComboBox(self)
 
         # Layout
@@ -27,6 +27,7 @@ class Player(QWidget):
         vbl = QVBoxLayout()
         vbl.addLayout(hbl)
         vbl.addWidget(self.button_play)
+        vbl.addWidget(self.button_pause)
 
         self.setLayout(vbl)
         self.songlist_init()
@@ -35,8 +36,8 @@ class Player(QWidget):
         self.songname = "Please choose a song!"
         self.songlistbox.activated[str].connect(self.song_change)
         self.button_play.clicked.connect(self.song_play)
+        self.button_pause.clicked.connect(self.song_pause)
 
-        mixer.init()
         self.show()
 
     def songlist_init(self):
@@ -54,10 +55,16 @@ class Player(QWidget):
         if self.songname != "Please choose a song!":
             song = self.song_directory + self.songname
             try:
-                mixer.music.load(song)
-                mixer.music.play()
+                pygame.mixer.music.load(song)
+                pygame.mixer.music.play()
             except pygame.error:
                 pass
+
+    def song_pause(self):
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.pause()
+        else:
+            pygame.mixer.music.unpause()
 
 
 if __name__ == "__main__":
