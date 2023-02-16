@@ -4,6 +4,7 @@ from glob import glob
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
+
 class Player(QWidget):
     def __init__(self):
         super().__init__()
@@ -59,7 +60,7 @@ class Player(QWidget):
         start = len(self.song_directory)
         songlist = [self.song_directory + "Please choose a song!"]
         songlist = songlist + glob(self.song_directory + "*.mp3") + glob(self.song_directory + "*.wav") \
-                           + glob(self.song_directory + "*.flac") + glob(self.song_directory + "*.ogg")
+                            + glob(self.song_directory + "*.flac") + glob(self.song_directory + "*.ogg")
         for song in songlist:
             self.songlistbox.addItem(song[start:])
 
