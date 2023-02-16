@@ -1,13 +1,15 @@
 import sys
 from glob import glob
+
+import pygame
+from pygame import mixer
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-
 
 class Player(QWidget):
     def __init__(self):
         super().__init__()
-        self.resize(1280,720)
+#        self.resize(1280,720)
         self.setWindowTitle("Musicman")
         self.song_directory = "music/"
 
@@ -34,13 +36,14 @@ class Player(QWidget):
         self.songlistbox.activated[str].connect(self.song_change)
         self.button_play.clicked.connect(self.song_play)
 
+        mixer.init()
         self.show()
 
     def songlist_init(self):
         start = len(self.song_directory)
         songlist = [self.song_directory + "Please choose a song!"]
         songlist = songlist + glob(self.song_directory + "*.mp3") + glob(self.song_directory + "*.wav") \
-                            + glob(self.song_directory + "*.flac")
+                           + glob(self.song_directory + "*.flac") + glob(self.song_directory + "*.ogg")
         for song in songlist:
             self.songlistbox.addItem(song[start:])
 
@@ -50,10 +53,14 @@ class Player(QWidget):
     def song_play(self):
         if self.songname != "Please choose a song!":
             song = self.song_directory + self.songname
-            print(song)
+            try:
+                mixer.music.load(song)
+                mixer.music.play()
+            except pygame.error:
+                pass
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    w = Player()
+    player = Player()
     sys.exit(app.exec_())

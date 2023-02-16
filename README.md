@@ -1,7 +1,7 @@
 # musicman - WIP
 A simple music player written in Python using PyQt5
 
-Supports mp3, wav and flac files on Windows/Linux
+Supports mp3, wav, flac and ogg files on Windows/Linux
 
 Python project for a school research paper
 
