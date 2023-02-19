@@ -13,13 +13,6 @@ class Player(QWidget):
         self.icon = "assets/icon.png"
         pygame.mixer.init()
 
-        # Tray Icon
-        self.trayicon = QSystemTrayIcon(QIcon(self.icon))
-        self.trayicon.setToolTip("Musicman")
-        traymenu = QMenu()
-        trayopen = traymenu.addAction("Open")
-        trayexit = traymenu.addAction("Exit")
-        self.trayicon.setContextMenu(traymenu)
 
         # Widgets
         self.setWindowIcon(QIcon(self.icon))
@@ -28,6 +21,22 @@ class Player(QWidget):
         self.button_pause = QPushButton("Pause / Resume", self)
         self.button_min = QPushButton("Minimize to tray", self)
         self.songlistbox = QComboBox(self)
+
+        # Tray
+        self.trayicon = QSystemTrayIcon(QIcon(self.icon))
+        self.trayicon.setToolTip("Musicman")
+        traymenu = QMenu()
+        trayopen = traymenu.addAction("Open")
+        trayexit = traymenu.addAction("Exit")
+        self.trayicon.setContextMenu(traymenu)
+
+        # Songlist
+        start = len(self.song_directory)
+        songlist = [self.song_directory + "Please choose a song!"]
+        songlist = songlist + glob(self.song_directory + "*.mp3") + glob(self.song_directory + "*.wav") \
+                   + glob(self.song_directory + "*.flac") + glob(self.song_directory + "*.ogg")
+        for song in songlist:
+            self.songlistbox.addItem(song[start:])
 
         # Layout
         hbl = QHBoxLayout()
@@ -44,7 +53,6 @@ class Player(QWidget):
         vbl.addWidget(self.button_min)
 
         self.setLayout(vbl)
-        self.songlist_init()
 
         # Connections
         self.songname = "Please choose a song!"
@@ -52,17 +60,11 @@ class Player(QWidget):
         self.button_play.clicked.connect(self.song_play)
         self.button_pause.clicked.connect(self.song_pause)
         self.button_min.clicked.connect(self.minimize)
+
         trayopen.triggered.connect(self.minimize)
         trayexit.triggered.connect(self.stop)
-        self.show()
 
-    def songlist_init(self):
-        start = len(self.song_directory)
-        songlist = [self.song_directory + "Please choose a song!"]
-        songlist = songlist + glob(self.song_directory + "*.mp3") + glob(self.song_directory + "*.wav") \
-                            + glob(self.song_directory + "*.flac") + glob(self.song_directory + "*.ogg")
-        for song in songlist:
-            self.songlistbox.addItem(song[start:])
+        self.show()
 
     def song_change(self):
         self.songname = str(self.songlistbox.currentText())
