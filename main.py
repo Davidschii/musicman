@@ -11,6 +11,8 @@ class Player(QWidget):
         self.setWindowTitle("Musicman")
         self.song_directory = "music/"
         self.icon = "assets/icon.png"
+        self.songliststart = "Please choose a song."
+        self.songname = self.songliststart
         pygame.mixer.init()
 
 
@@ -32,7 +34,7 @@ class Player(QWidget):
 
         # Songlist
         start = len(self.song_directory)
-        songlist = [self.song_directory + "Please choose a song!"]
+        songlist = [self.song_directory + self.songliststart]
         songlist = songlist + glob(self.song_directory + "*.mp3") + glob(self.song_directory + "*.wav") \
                    + glob(self.song_directory + "*.flac") + glob(self.song_directory + "*.ogg")
         for song in songlist:
@@ -55,7 +57,6 @@ class Player(QWidget):
         self.setLayout(vbl)
 
         # Connections
-        self.songname = "Please choose a song!"
         self.songlistbox.activated[str].connect(self.song_change)
         self.button_play.clicked.connect(self.song_play)
         self.button_pause.clicked.connect(self.song_pause)
@@ -70,7 +71,7 @@ class Player(QWidget):
         self.songname = str(self.songlistbox.currentText())
 
     def song_play(self):
-        if self.songname != "Please choose a song!":
+        if self.songname != self.songliststart:
             song = self.song_directory + self.songname
             try:
                 pygame.mixer.music.load(song)
