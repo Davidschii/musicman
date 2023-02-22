@@ -1,6 +1,6 @@
 import sys
-import mutagen
 import pygame
+import mutagen
 from glob import glob
 from mutagen.mp3 import MP3
 from mutagen.wave import WAVE
