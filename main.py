@@ -1,8 +1,14 @@
 import sys
+import mutagen
 import pygame
 from glob import glob
+from mutagen.mp3 import MP3
+from mutagen.wave import WAVE
+from mutagen.flac import FLAC
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaPlaylist, QMediaObject
 
 
 class Player(QWidget):
@@ -15,7 +21,6 @@ class Player(QWidget):
         self.songname = self.songliststart
         pygame.mixer.init()
 
-
         # Widgets
         self.setWindowIcon(QIcon(self.icon))
         self.label = QLabel("Song selection:", self)
@@ -23,6 +28,9 @@ class Player(QWidget):
         self.button_pause = QPushButton("Pause / Resume", self)
         self.button_min = QPushButton("Minimize to tray", self)
         self.songlistbox = QComboBox(self)
+        self.progressSlider = QSlider(Qt.Horizontal)
+        self.timelabel1 = QLabel("00:00", self)
+        self.timelabel2 = QLabel("00:00", self)
 
         # Tray
         self.trayicon = QSystemTrayIcon(QIcon(self.icon))
@@ -36,7 +44,7 @@ class Player(QWidget):
         start = len(self.song_directory)
         songlist = [self.song_directory + self.songliststart]
         songlist = songlist + glob(self.song_directory + "*.mp3") + glob(self.song_directory + "*.wav") \
-                   + glob(self.song_directory + "*.flac") + glob(self.song_directory + "*.ogg")
+                            + glob(self.song_directory + "*.flac")
         for song in songlist:
             self.songlistbox.addItem(song[start:])
 
@@ -46,12 +54,19 @@ class Player(QWidget):
         hbl.addWidget(self.songlistbox)
 
         hbl2 = QHBoxLayout()
-        hbl2.addWidget(self.button_play)
-        hbl2.addWidget(self.button_pause)
+        hbl2.addWidget(self.timelabel1)
+        hbl2.addWidget(self.progressSlider)
+        hbl2.addWidget(self.timelabel2)
+
+
+        hbl3 = QHBoxLayout()
+        hbl3.addWidget(self.button_play)
+        hbl3.addWidget(self.button_pause)
 
         vbl = QVBoxLayout()
         vbl.addLayout(hbl)
         vbl.addLayout(hbl2)
+        vbl.addLayout(hbl3)
         vbl.addWidget(self.button_min)
 
         self.setLayout(vbl)
@@ -69,15 +84,45 @@ class Player(QWidget):
 
     def song_change(self):
         self.songname = str(self.songlistbox.currentText())
+        if self.songname != self.songliststart:
+            self.song = self.song_directory + self.songname
+        try:
+            if self.song[-3:] == "mp3":
+                audio = MP3(self.song)
+            elif self.song[-3:] == "wav":
+                audio = WAVE(self.song)
+            elif self.song[-4:] == "flac":
+                audio = FLAC(self.song)
+            audio_info = audio.info
+            self.length = int(audio_info.length)
+        except mutagen.MutagenError:
+            self.length = 0
+        self.progressSlider.setRange(0, self.length)
+        self.progressSlider.setValue(0)
+        hours, mins, secs = (self.lengthconv(self.length))
+        hours = str(hours)
+        mins = str(mins)
+        secs = str(secs)
+        if len(hours) == 1:
+            hours = "0" + hours
+        if len(mins) == 1:
+            mins = "0" + mins
+        if len(secs) == 1:
+            secs = "0" + secs
+        if hours == "00":
+            self.timelabel2.setText(f"{mins}:{secs}")
+        else:
+            self.timelabel2.setText(f"{hours}:{mins}:{secs}")
+
 
     def song_play(self):
-        if self.songname != self.songliststart:
-            song = self.song_directory + self.songname
-            try:
-                pygame.mixer.music.load(song)
-                pygame.mixer.music.play()
-            except pygame.error:
-                pass
+        try:
+            pygame.mixer.music.load(self.song)
+            pygame.mixer.music.play()
+        except pygame.error:
+            pass
+        except AttributeError:
+            pass
 
     def song_pause(self):
         if pygame.mixer.music.get_busy():
@@ -94,9 +139,13 @@ class Player(QWidget):
             self.show()
 
     def stop(self):
-        pygame.mixer.quit()
         sys.exit()
 
+    def lengthconv(self, length):
+        hours = int(length / 3600)
+        minutes = int(length / 60)
+        seconds = length - minutes*60
+        return hours, minutes, seconds
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
