@@ -114,7 +114,6 @@ class Player(QWidget):
         else:
             self.timelabel2.setText(f"{hours}:{mins}:{secs}")
 
-
     def song_play(self):
         try:
             pygame.mixer.music.load(self.song)
@@ -146,6 +145,7 @@ class Player(QWidget):
         minutes = int(length / 60)
         seconds = length - minutes*60
         return hours, minutes, seconds
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
