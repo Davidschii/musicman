@@ -1,14 +1,17 @@
 import sys
-import pygame
+import os
 import mutagen
 from glob import glob
 from mutagen.mp3 import MP3
 from mutagen.wave import WAVE
 from mutagen.flac import FLAC
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from PyQt5.QtMultimedia import QMediaPlayer, QMediaPlaylist, QMediaObject
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent, QMediaPlaylist
+
+# changes QMediaPlayer backend
+os.environ['QT_MULTIMEDIA_PREFERRED_PLUGINS'] = 'windowsmediafoundation'
 
 
 class Player(QWidget):
@@ -19,16 +22,16 @@ class Player(QWidget):
         self.icon = "assets/icon.png"
         self.songliststart = "Please choose a song."
         self.songname = self.songliststart
-        pygame.mixer.init()
+        self.musicplayer = QMediaPlayer(self)
 
         # Widgets
         self.setWindowIcon(QIcon(self.icon))
+        self.progressSlider = QSlider(Qt.Horizontal)
         self.label = QLabel("Song selection:", self)
         self.button_play = QPushButton("Play", self)
         self.button_pause = QPushButton("Pause / Resume", self)
         self.button_min = QPushButton("Minimize to tray", self)
         self.songlistbox = QComboBox(self)
-        self.progressSlider = QSlider(Qt.Horizontal)
         self.timelabel1 = QLabel("00:00", self)
         self.timelabel2 = QLabel("00:00", self)
 
@@ -48,6 +51,7 @@ class Player(QWidget):
         for song in songlist:
             self.songlistbox.addItem(song[start:])
 
+
         # Layout
         hbl = QHBoxLayout()
         hbl.addWidget(self.label)
@@ -58,10 +62,10 @@ class Player(QWidget):
         hbl2.addWidget(self.progressSlider)
         hbl2.addWidget(self.timelabel2)
 
-
         hbl3 = QHBoxLayout()
         hbl3.addWidget(self.button_play)
         hbl3.addWidget(self.button_pause)
+
 
         vbl = QVBoxLayout()
         vbl.addLayout(hbl)
@@ -76,9 +80,11 @@ class Player(QWidget):
         self.button_play.clicked.connect(self.song_play)
         self.button_pause.clicked.connect(self.song_pause)
         self.button_min.clicked.connect(self.minimize)
+        self.musicplayer.positionChanged.connect(self.positionupdate)
+        self.progressSlider.sliderMoved.connect(self.progress_Slider)
 
         trayopen.triggered.connect(self.minimize)
-        trayexit.triggered.connect(self.stop)
+        trayexit.triggered.connect(sys.exit)
 
         self.show()
 
@@ -97,9 +103,7 @@ class Player(QWidget):
             self.length = int(audio_info.length)
         except mutagen.MutagenError:
             self.length = 0
-        self.progressSlider.setRange(0, self.length)
-        self.progressSlider.setValue(0)
-        hours, mins, secs = (self.lengthconv(self.length))
+        hours, mins, secs = (self.timeconv(self.length))
         hours = str(hours)
         mins = str(mins)
         secs = str(secs)
@@ -113,21 +117,42 @@ class Player(QWidget):
             self.timelabel2.setText(f"{mins}:{secs}")
         else:
             self.timelabel2.setText(f"{hours}:{mins}:{secs}")
+        self.progressSlider.setRange(0, self.length)
+        self.progressSlider.setValue(0)
 
     def song_play(self):
         try:
-            pygame.mixer.music.load(self.song)
-            pygame.mixer.music.play()
-        except pygame.error:
-            pass
+            self.musicplayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.song)))
+            self.musicplayer.play()
         except AttributeError:
             pass
 
-    def song_pause(self):
-        if pygame.mixer.music.get_busy():
-            pygame.mixer.music.pause()
+    def positionupdate(self, position):
+        self.position = round(position / 1000)
+        hours, mins, secs = self.timeconv(self.position)
+        hours = str(hours)
+        mins = str(mins)
+        secs = str(secs)
+        if len(hours) == 1:
+            hours = "0" + hours
+        if len(mins) == 1:
+            mins = "0" + mins
+        if len(secs) == 1:
+            secs = "0" + secs
+        if hours == "00":
+            self.timelabel1.setText(f"{mins}:{secs}")
         else:
-            pygame.mixer.music.unpause()
+            self.timelabel1.setText(f"{hours}:{mins}:{secs}")
+        self.progressSlider.setValue(self.position)
+
+    def progress_Slider(self, position):
+        self.musicplayer.setPosition(position * 1000)
+
+    def song_pause(self):
+        if self.musicplayer.state() == QMediaPlayer.PlayingState:
+            self.musicplayer.pause()
+        else:
+            self.musicplayer.play()
 
     def minimize(self):
         if self.isVisible():
@@ -137,13 +162,10 @@ class Player(QWidget):
             self.trayicon.hide()
             self.show()
 
-    def stop(self):
-        sys.exit()
-
-    def lengthconv(self, length):
+    def timeconv(self, length):
         hours = int(length / 3600)
-        minutes = int(length / 60)
-        seconds = length - minutes*60
+        minutes = int(length / 60 - hours * 60)
+        seconds = round(length - hours * 3600 - minutes * 60)
         return hours, minutes, seconds
 
 
