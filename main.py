@@ -107,7 +107,10 @@ class Player(QWidget):
     def dirUpdate(self):
         self.songlistbox.clear()
         self.song_directory = str(self.customdirectory.text())
-        if self.song_directory[-1:] != "\\":
+        if len(self.song_directory) == 0:
+            self.song_directory = f"C:\\Users\{os.getlogin()}\\Music\\"
+            self.customdirectory.setText(self.song_directory)
+        elif self.song_directory[-1:] != "\\":
             self.song_directory = self.song_directory + "\\"
         start = len(self.song_directory)
         songlist = [self.song_directory + self.songliststart]

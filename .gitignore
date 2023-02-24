@@ -1,2 +1,5 @@
 /music/*.*
 /.idea/*
+/dist/
+/build/
+/Musicman.spec
