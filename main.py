@@ -105,21 +105,25 @@ class Player(QWidget):
         self.trayicon.setContextMenu(traymenu)
 
     def dirUpdate(self):
-        self.songlistbox.clear()
-        self.song_directory = str(self.customdirectory.text())
-        if len(self.song_directory) == 0:
-            self.song_directory = f"C:\\Users\{os.getlogin()}\\Music\\"
-            self.customdirectory.setText(self.song_directory)
-        elif self.song_directory[-1:] != "\\":
-            self.song_directory = self.song_directory + "\\"
-        start = len(self.song_directory)
-        songlist = [self.song_directory + self.songliststart]
-        songlist = songlist + glob(self.song_directory + "*.mp3") + glob(self.song_directory + "*.wav") \
-                   + glob(self.song_directory + "*.flac")
-        for song in songlist:
-            self.songlistbox.addItem(song[start:])
-        with open("directory", "w") as dirfile:
-            dirfile.write(self.song_directory)
+        try:
+            self.songlistbox.clear()
+            self.song_directory = str(self.customdirectory.text())
+            if len(self.song_directory) == 0:
+                self.song_directory = f"C:\\Users\{os.getlogin()}\\Music\\"
+                self.customdirectory.setText(self.song_directory)
+            elif self.song_directory[-1:] != "\\":
+                self.song_directory = self.song_directory + "\\"
+            start = len(self.song_directory)
+            songlist = [self.song_directory + self.songliststart]
+            songlist = songlist + glob(self.song_directory + "*.mp3") + glob(self.song_directory + "*.wav") \
+                       + glob(self.song_directory + "*.flac")
+            for song in songlist:
+                self.songlistbox.addItem(song[start:])
+            with open("directory", "w") as dirfile:
+                dirfile.write(self.song_directory)
+        except UnicodeEncodeError:
+            pass
+
 
 
     def songChange(self):
